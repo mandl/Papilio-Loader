@@ -155,7 +155,7 @@ int main(int argc, char **argv)
     char const *serial = 0;
     int subtype = FTDI_NO_EN;
     char *devicedb = NULL;
-    char c;
+    int c;
     char *cFpga_fn=0;
     char *cBscan_fn=0;
     char *append_str = 0;
@@ -278,8 +278,17 @@ int main(int argc, char **argv)
     }
     catch(io_exception& e)
     {
-        fprintf(stderr, "Could not access USB device %04x:%04x. If this is linux then use sudo.\n",vendor, product);
-        return 1;
+	//Try the Papilio DUO before failing
+	try
+	{
+		io.reset(new IOFtdi(vendor, 0x7bc0, desc, serial, subtype));
+		io->setVerbose(verbose);
+	}
+	catch(io_exception& e2)
+	{
+        	fprintf(stderr, "Could not access USB device %04x:%04x. If this is linux then use sudo.\n",vendor, product);
+        	return 1;
+	}
     }
 
     Jtag jtag = Jtag(io.operator->());
